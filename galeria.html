@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#171717"><title>Trabajos - Electricista App</title>
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/galeria.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="index.html"><span>⚡</span> Electricista App</a><button class="menu-toggle" id="menuToggle">☰</button>
+<nav id="mainNav"><a href="index.html">⚡ Inicio</a><a class="active" href="galeria.html">📸 Trabajos</a><a href="materiales.html">🧰 Materiales</a><a href="calculadora.html">🧮 Calculadora</a></nav></header>
+<main class="page">
+<section class="page-heading"><div><span class="eyebrow">PROYECTOS</span><h1>Mis trabajos</h1><p>Registrá cada trabajo y conservá sus fotos y anotaciones.</p></div><button class="btn btn-primary" id="newWorkBtn">＋ Nuevo trabajo</button></section>
+<div id="workList" class="work-grid"></div>
+<div id="emptyWorks" class="empty-state hidden"><div>📸</div><h2>Todavía no tenés trabajos</h2><p>Creá tu primer trabajo para empezar a guardar fotos y planos.</p><button class="btn btn-primary" id="emptyNewBtn">＋ Crear trabajo</button></div>
+</main>
+<div class="modal hidden" id="workModal"><div class="modal-box"><button class="modal-close" data-close>×</button><h2 id="modalTitle">Nuevo trabajo</h2>
+<form id="workForm"><label>Nombre del trabajo<input id="workName" required placeholder="Ej. Instalación eléctrica cocina"></label>
+<label>Categoría<select id="workCategory"><option>Instalación</option><option>Reparación</option><option>Mantenimiento</option><option>Tablero</option><option>Iluminación</option><option>Otro</option></select></label>
+<label>Descripción<textarea id="workDescription" rows="4" placeholder="Detalles del trabajo..."></textarea></label>
+<div class="form-actions"><button type="button" class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary">Guardar trabajo</button></div></form></div></div>
+<div class="modal hidden" id="detailModal"><div class="modal-box modal-large"><button class="modal-close" data-close>×</button><div id="detailContent"></div></div></div>
+<footer class="footer"><div><strong>⚡ Electricista App</strong><span>Organizá tus trabajos</span></div><span>Guardado local en tu navegador</span></footer>
+<script src="js/app.js"></script><script src="js/galeria.js"></script>
+</body></html>

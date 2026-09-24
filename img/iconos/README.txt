@@ -1,0 +1,1 @@
+Colocá aquí iconos generales de la aplicación si querés reemplazarlos.
