@@ -152,10 +152,23 @@
   cameraInput.addEventListener("change", () => processPhotos(cameraInput));
   galleryInput.addEventListener("change", () => processPhotos(galleryInput));
 
+  // Símbolos eléctricos incluidos en img/iconos/.
+  // Están normalizados a 512x512 WebP para celular y PC.
   const DEFAULT_SYMBOLS = [
-    ["toma", "🔌"], ["toma-doble", "⏺️"], ["tecla", "🔘"], ["tecla-doble", "◉"],
-    ["luminaria", "💡"], ["caja", "▣"], ["tablero", "▤"], ["termica", "⚡"],
-    ["disyuntor", "◈"], ["ventilador", "🌀"], ["spot", "🔆"], ["USB", "🔋"]
+    ["toma", "🔌", "img/iconos/TomaSimple.webp"],
+    ["toma doble", "⏺️", "img/iconos/TomaDoble.webp"],
+    ["toma 20A", "🔌", "img/iconos/Toma20A.webp"],
+    ["punto simple", "🔘", "img/iconos/PuntoSimple.webp"],
+    ["punto doble", "◉", "img/iconos/PuntoDoble.webp"],
+    ["punto y toma", "🔘", "img/iconos/PuntoToma.webp"],
+    ["3 puntos", "◉", "img/iconos/3puntos.webp"],
+    ["caja estanco", "▣", "img/iconos/CajaEstanco.webp"],
+    ["caja octagonal", "▣", "img/iconos/CajaOctagonal.webp"],
+    ["tablero", "▤", "img/iconos/TableroTermica.webp"],
+    ["térmica 10A", "⚡", "img/iconos/Termica10A.webp"],
+    ["térmica 15A", "⚡", "img/iconos/Termica15A.webp"],
+    ["térmica 20A", "⚡", "img/iconos/Termica20A.webp"],
+    ["disyuntor 40A", "◈", "img/iconos/Disyuntor40A.webp"]
   ];
   const getCustomSymbols = () => JSON.parse(localStorage.getItem("electricista_custom_symbols") || "[]");
   const saveCustomSymbols = (x) => localStorage.setItem("electricista_custom_symbols", JSON.stringify(x));
@@ -316,9 +329,13 @@
     const panel=modal.querySelector("#symbolPanel");
     function buildSymbols(){
       const customs=getCustomSymbols();
-      panel.innerHTML=DEFAULT_SYMBOLS.map(s=>`<button type="button" class="symbol-choice" data-emoji="${s[1]}" data-label="${s[0]}"><span>${s[1]}</span><small>${s[0]}</small></button>`).join("")+
+      panel.innerHTML=DEFAULT_SYMBOLS.map(s=>`<button type="button" class="symbol-choice" data-emoji="${s[1]}" data-label="${s[0]}" data-image="${s[2]}"><img src="${s[2]}" alt="${s[0]}"><small>${s[0]}</small></button>`).join("")+
         customs.map((s,i)=>`<button type="button" class="symbol-choice" data-custom="${i}"><img src="${s.image}" alt=""><small>${escapeHtml(s.name)}</small></button>`).join("")+`<button type="button" class="symbol-choice add-symbol"><span>➕</span><small>Agregar PNG</small></button>`;
-      panel.querySelectorAll("[data-emoji]").forEach(b=>b.onclick=()=>addSymbol({emoji:b.dataset.emoji,label:b.dataset.label}));
+      panel.querySelectorAll("[data-emoji]").forEach(b=>b.onclick=()=>addSymbol({
+        emoji:b.dataset.emoji,
+        label:b.dataset.label,
+        image:b.dataset.image
+      }));
       panel.querySelectorAll("[data-custom]").forEach(b=>b.onclick=()=>addSymbol(customs[+b.dataset.custom]));
       panel.querySelector(".add-symbol").onclick=()=>customSymbolInput.click();
     }

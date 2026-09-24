@@ -267,3 +267,29 @@
   font-weight: 700;
   margin-bottom: 2px;
 }
+
+/* Iconos eléctricos optimizados */
+.symbol-choice img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 34px;
+}
+
+.symbol-choice {
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .symbol-choice {
+    width: 68px;
+    height: 70px;
+  }
+
+  .symbol-choice img {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+}
