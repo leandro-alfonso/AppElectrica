@@ -105,3 +105,17 @@
     grid-template-columns:1fr
   }
 }
+
+
+.file-source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.file-source-help {
+  display: block;
+  margin-top: 7px;
+  color: #666;
+}

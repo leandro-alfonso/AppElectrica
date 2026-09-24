@@ -66,6 +66,20 @@
     }
   }
 
+  // El botón de cámara usa capture; el botón de galería NO lo usa para que el móvil
+  // muestre el selector de archivos/fotos en lugar de abrir directamente la cámara.
+  $("matCameraBtn")?.addEventListener("click", () => {
+    const input = $("matPhoto");
+    input.setAttribute("capture", "environment");
+    input.click();
+  });
+
+  $("matGalleryBtn")?.addEventListener("click", () => {
+    const input = $("matPhoto");
+    input.removeAttribute("capture");
+    input.click();
+  });
+
   async function handlePhoto(event) {
     try {
       const file = event.target.files?.[0];

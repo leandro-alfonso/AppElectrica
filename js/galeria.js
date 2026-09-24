@@ -85,7 +85,7 @@
         <div class="detail-tools"><button type="button" class="btn btn-secondary edit-work">✏️ Editar</button><button type="button" class="btn btn-primary add-photo">📷 Agregar foto</button><button type="button" class="btn btn-danger delete-detail">🗑️</button></div></div>
         <div class="photo-grid">${photos.map((p) => photoCard(p)).join("")}</div>`;
       detailContent.querySelector(".edit-work")?.addEventListener("click", () => { detailModal.classList.add("hidden"); openWorkForm(currentWork); });
-      detailContent.querySelector(".add-photo")?.addEventListener("click", () => photoInput.click());
+      detailContent.querySelector(".add-photo")?.addEventListener("click", openPhotoSource);
       detailContent.querySelector(".delete-detail")?.addEventListener("click", () => deleteWork(id));
       detailContent.querySelectorAll(".delete-photo").forEach((b, i) => b.addEventListener("click", async () => { if (confirm("¿Eliminar esta foto?")) { await dbDelete(stores.photos, photos[i].id); await openDetail(id); } }));
       detailContent.querySelectorAll(".edit-photo").forEach((b, i) => b.addEventListener("click", () => openEditor(photos[i])));
@@ -105,22 +105,52 @@
     await openDetail(currentWork.id);
   }
 
-  const photoInput = document.createElement("input");
-  photoInput.type = "file"; photoInput.accept = "image/*"; photoInput.capture = "environment"; photoInput.multiple = true; photoInput.hidden = true;
-  document.body.appendChild(photoInput);
-  photoInput.addEventListener("change", async () => {
+  // Inputs separados: uno abre la cámara y otro permite elegir desde la galería.
+  // No usamos capture en el input de galería porque eso puede forzar la cámara en móviles.
+  const cameraInput = document.createElement("input");
+  cameraInput.type = "file";
+  cameraInput.accept = "image/*";
+  cameraInput.capture = "environment";
+  cameraInput.multiple = true;
+  cameraInput.hidden = true;
+
+  const galleryInput = document.createElement("input");
+  galleryInput.type = "file";
+  galleryInput.accept = "image/*";
+  galleryInput.multiple = true;
+  galleryInput.hidden = true;
+
+  document.body.append(cameraInput, galleryInput);
+
+  function openPhotoSource() {
+    const box = document.createElement("div");
+    box.className = "photo-source-actions";
+    box.innerHTML = `
+      <div class="photo-source-title">¿Cómo querés agregar la foto?</div>
+      <button type="button" class="btn btn-primary source-camera">📷 Sacar foto</button>
+      <button type="button" class="btn btn-secondary source-gallery">🖼️ Elegir de galería</button>`;
+    document.body.appendChild(box);
+
+    box.querySelector(".source-camera").onclick = () => { box.remove(); cameraInput.click(); };
+    box.querySelector(".source-gallery").onclick = () => { box.remove(); galleryInput.click(); };
+  }
+
+  async function processPhotos(input) {
     try {
-      if (!photoInput.files.length || !currentWork) return;
-      for (const file of [...photoInput.files]) {
+      if (!input.files.length || !currentWork) return;
+      for (const file of [...input.files]) {
         const data = await readFile(file);
         const description = prompt(`Descripción de la foto "${file.name}"`, "");
         await dbPut(stores.photos, { id: uid(), workId: currentWork.id, data, original: data, description: description || "", objects: [], created: Date.now() });
       }
-      photoInput.value = "";
+      input.value = "";
       await openDetail(currentWork.id);
       await renderWorks();
     } catch (error) { showError(error); }
-  });
+  }
+
+  cameraInput.addEventListener("change", () => processPhotos(cameraInput));
+  galleryInput.addEventListener("change", () => processPhotos(galleryInput));
 
   const DEFAULT_SYMBOLS = [
     ["toma", "🔌"], ["toma-doble", "⏺️"], ["tecla", "🔘"], ["tecla-doble", "◉"],

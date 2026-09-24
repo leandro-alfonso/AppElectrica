@@ -13,7 +13,14 @@
 </main>
 <div class="modal hidden" id="materialModal"><div class="modal-box"><button class="modal-close" data-close>×</button><h2 id="materialModalTitle">Nuevo material</h2>
 <form id="materialForm"><input type="hidden" id="materialId">
-<div class="form-grid"><label>Nombre<input id="matName" required placeholder="Ej. Tomacorriente doble"></label><label>Categoría<select id="matCategory"><option>Tomas</option><option>Teclas</option><option>Térmicas</option><option>Disyuntores</option><option>Cajas</option><option>Cables</option><option>Iluminación</option><option>Otros</option></select></label><label>Marca<input id="matBrand" placeholder="Ej. Jeluz"></label><label>Modelo / descripción<input id="matModel" placeholder="Ej. Verona"></label><label class="full">Observación<textarea id="matObservation" rows="3"></textarea></label><label>Cantidad<input id="matQty" type="number" min="1" value="1"></label><label>Foto<input id="matPhoto" type="file" accept="image/*" capture="environment"></label></div>
+<div class="form-grid"><label>Nombre<input id="matName" required placeholder="Ej. Tomacorriente doble"></label><label>Categoría<select id="matCategory"><option>Tomas</option><option>Teclas</option><option>Térmicas</option><option>Disyuntores</option><option>Cajas</option><option>Cables</option><option>Iluminación</option><option>Otros</option></select></label><label>Marca<input id="matBrand" placeholder="Ej. Jeluz"></label><label>Modelo / descripción<input id="matModel" placeholder="Ej. Verona"></label><label class="full">Observación<textarea id="matObservation" rows="3"></textarea></label><label>Cantidad<input id="matQty" type="number" min="1" value="1"></label><label class="full">Foto
+<div class="file-source-actions">
+  <input id="matPhoto" type="file" accept="image/*" hidden>
+  <button type="button" class="btn btn-primary" id="matCameraBtn">📷 Sacar foto</button>
+  <button type="button" class="btn btn-secondary" id="matGalleryBtn">🖼️ Elegir de galería</button>
+</div>
+<small class="file-source-help">Podés sacar una foto o elegir una imagen que ya tengas en el teléfono.</small>
+</label></div>
 <div id="photoPreview" class="photo-preview"></div><div class="form-actions"><button type="button" class="btn btn-secondary" data-close>Cancelar</button><button class="btn btn-primary">Guardar material</button></div></form></div></div>
 <div class="modal hidden" id="listModal"><div class="modal-box modal-large"><button class="modal-close" data-close>×</button><div id="listContent"></div></div></div>
 <footer class="footer"><div><strong>⚡ Electricista App</strong><span>Lista de materiales</span></div><span>Compartí o guardá la lista como imagen</span></footer>
