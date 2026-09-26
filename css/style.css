@@ -61,6 +61,16 @@ body {
   font-size:1.7rem;
   margin-left:auto
 }
+.theme-toggle {
+  background:none;
+  border:0;
+  color:#fff;
+  font-size:1.25rem;
+  cursor:pointer;
+  margin-left:auto;
+  line-height:1;
+  padding:6px
+}
 .page {
   width:min(1200px,calc(100% - 32px));
   margin:0 auto;
@@ -309,11 +319,24 @@ body {
 .form-grid .full {
   grid-column:1/-1
 }
-.photo-preview img {
-  max-width:150px;
-  max-height:150px;
+.photo-preview:has(img) {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:150px;
+  height:150px;
+  background:#ededeb;
   border-radius:10px;
-  object-fit:cover
+  padding:10px;
+  margin-top:6px
+}
+.photo-preview img {
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  border-radius:4px;
+  object-fit:contain
 }
 .footer {
   margin-top:auto;
@@ -377,6 +400,9 @@ body {
   .menu-toggle {
     display:block
   }
+  .theme-toggle {
+    margin-left:8px
+  }
   .topbar nav {
     display:none;
     position:absolute;
@@ -439,4 +465,100 @@ body {
   body {
     font-size:16px
   }
+}
+
+/* ===== Modo oscuro ===== */
+:root.theme-dark body {
+  background:#121212;
+  color:#e9e9e7
+}
+:root.theme-dark .hero {
+  background:linear-gradient(120deg,#000,#0a0a0a)
+}
+:root.theme-dark .feature-card,
+:root.theme-dark .stat-card,
+:root.theme-dark .material-card,
+:root.theme-dark .work-card,
+:root.theme-dark .calculator-card,
+:root.theme-dark .cable-reference,
+:root.theme-dark .circuit-card,
+:root.theme-dark .modal-box,
+:root.theme-dark .empty-state {
+  background:#1c1c1c;
+  border-color:#333;
+  color:#e9e9e7
+}
+:root.theme-dark .material-photo,
+:root.theme-dark .photo-preview:has(img),
+:root.theme-dark .work-cover,
+:root.theme-dark .photo-card,
+:root.theme-dark .icon-pick-btn,
+:root.theme-dark .result-box,
+:root.theme-dark .detail-description,
+:root.theme-dark .symbol-panel,
+:root.theme-dark .qty-controls button {
+  background:#262624;
+  border-color:#3a3a3a
+}
+:root.theme-dark .feature-icon,
+:root.theme-dark p,
+:root.theme-dark .material-info p,
+:root.theme-dark .work-meta,
+:root.theme-dark .work-body p,
+:root.theme-dark small,
+:root.theme-dark .result-box small,
+:root.theme-dark .photo-info small {
+  color:#aaa
+}
+:root.theme-dark input,
+:root.theme-dark select,
+:root.theme-dark textarea {
+  background:#1c1c1c;
+  border-color:#3a3a3a;
+  color:#eee
+}
+:root.theme-dark .btn-secondary,
+:root.theme-dark .editor-toolbar button,
+:root.theme-dark .editor-options button,
+:root.theme-dark .symbol-choice {
+  background:#262624;
+  border-color:#3a3a3a;
+  color:#eee
+}
+:root.theme-dark .footer,
+:root.theme-dark .cable-visual {
+  background:#0c0c0c
+}
+:root.theme-dark .modal {
+  background:#000000cc
+}
+:root.theme-dark .icon-picker-label,
+:root.theme-dark .eyebrow {
+  color:#c9c9c6
+}
+
+.backup-card {
+  background:#fff;
+  border:1px solid #e5e5e2;
+  border-radius:16px;
+  padding:22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  flex-wrap:wrap
+}
+.backup-card p {
+  margin:0;
+  color:#666;
+  max-width:520px
+}
+.backup-actions {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap
+}
+:root.theme-dark .backup-card {
+  background:#1c1c1c;
+  border-color:#333
 }

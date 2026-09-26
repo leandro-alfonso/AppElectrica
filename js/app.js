@@ -106,6 +106,64 @@
     toggle.addEventListener("click", () => nav.classList.toggle("open"));
   }
 
+  const THEME_KEY = "electricistaTheme";
+
+  function applyTheme(theme) {
+    document.documentElement.classList.toggle("theme-dark", theme === "dark");
+    const btn = document.getElementById("themeToggle");
+    if (btn) btn.textContent = theme === "dark" ? "☀️" : "🌙";
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY) || "light";
+    applyTheme(saved);
+    const btn = document.getElementById("themeToggle");
+    btn?.addEventListener("click", () => {
+      const next = document.documentElement.classList.contains("theme-dark") ? "light" : "dark";
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+    });
+  }
+
+  async function exportBackup() {
+    try {
+      const [works, materials, photos] = await Promise.all([
+        dbGetAll(stores.works), dbGetAll(stores.materials), dbGetAll(stores.photos)
+      ]);
+      const payload = { app: "ElectricistaApp", version: 1, exported: new Date().toISOString(), works, materials, photos };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `electricista-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      showError(error);
+    }
+  }
+
+  function importBackup(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const data = JSON.parse(reader.result);
+          for (const item of data.works || []) await dbPut(stores.works, item);
+          for (const item of data.materials || []) await dbPut(stores.materials, item);
+          for (const item of data.photos || []) await dbPut(stores.photos, item);
+          resolve(data);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(reader.error || new Error("No se pudo leer el archivo."));
+      reader.readAsText(file);
+    });
+  }
+
   async function updateHomeCounters() {
     const workCount = document.getElementById("workCount");
     const materialCount = document.getElementById("materialCount");
@@ -123,11 +181,13 @@
   }
 
   window.Electricista = Object.freeze({
-    uid, dbPut, dbGetAll, dbGet, dbDelete, dbClear, readFile, escapeHtml, showError, stores
+    uid, dbPut, dbGetAll, dbGet, dbDelete, dbClear, readFile, escapeHtml, showError, stores,
+    exportBackup, importBackup
   });
 
   document.addEventListener("DOMContentLoaded", () => {
     initMenu();
+    initTheme();
     updateHomeCounters();
   });
 })();

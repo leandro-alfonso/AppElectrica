@@ -1,1 +1,0 @@
-Colocá aquí tus PNG/JPG de módulos y símbolos reales. Recomendado: fondo transparente y tamaño pequeño.

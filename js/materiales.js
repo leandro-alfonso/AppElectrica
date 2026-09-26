@@ -6,12 +6,82 @@
   let editingId = null;
   let oldPhoto = "";
 
+  const QUICK_ICONS = [
+    { file: "TomaSimple", label: "Toma simple", category: "Tomas" },
+    { file: "TomaDoble", label: "Toma doble", category: "Tomas" },
+    { file: "Toma20A", label: "Toma 20A", category: "Tomas" },
+    { file: "PuntoSimple", label: "Tecla simple", category: "Teclas" },
+    { file: "PuntoDoble", label: "Tecla doble", category: "Teclas" },
+    { file: "PuntoToma", label: "Tecla + toma", category: "Teclas" },
+    { file: "3puntos", label: "Tecla triple", category: "Teclas" },
+    { file: "Termica10A", label: "Térmica 10A", category: "Térmicas" },
+    { file: "Termica15A", label: "Térmica 15A", category: "Térmicas" },
+    { file: "Termica20A", label: "Térmica 20A", category: "Térmicas" },
+    { file: "Disyuntor40A", label: "Disyuntor 40A", category: "Disyuntores" },
+    { file: "CajaOctagonal", label: "Caja octogonal", category: "Cajas" },
+    { file: "CajaEstanco", label: "Caja estanco", category: "Cajas" },
+    { file: "TableroTermica", label: "Tablero térmicas", category: "Otros" }
+  ];
+
   const $ = (id) => document.getElementById(id);
   const materialModal = $("materialModal");
   const listModal = $("listModal");
   const materialList = $("materialList");
   const emptyMaterials = $("emptyMaterials");
   const materialForm = $("materialForm");
+  const iconPickerStrip = $("iconPickerStrip");
+
+  function iconPath(file) {
+    return `img/materiales_transparent/${file}.png`;
+  }
+
+  function renderIconPicker() {
+    if (!iconPickerStrip) return;
+    iconPickerStrip.innerHTML = "";
+    QUICK_ICONS.forEach((icon) => {
+      const path = iconPath(icon.file);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "icon-pick-btn";
+      if (oldPhoto === path) btn.classList.add("selected");
+      btn.innerHTML = `<img src="${path}" alt="${icon.label}"><span>${icon.label}</span>`;
+      btn.addEventListener("click", () => {
+        oldPhoto = path;
+        $("photoPreview").innerHTML = `<img src="${path}" alt="Vista previa">`;
+        iconPickerStrip.querySelectorAll(".icon-pick-btn").forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+      iconPickerStrip.appendChild(btn);
+    });
+  }
+
+  const SEED_FLAG = "electricistaMaterialesSeeded";
+
+  async function seedDefaultCatalog() {
+    if (localStorage.getItem(SEED_FLAG)) return;
+    try {
+      const existing = await dbGetAll(stores.materials);
+      if (existing.length === 0) {
+        let i = 0;
+        for (const icon of QUICK_ICONS) {
+          await dbPut(stores.materials, {
+            id: uid(),
+            name: icon.label,
+            category: icon.category,
+            brand: "",
+            model: "",
+            observation: "",
+            qty: 0,
+            photo: iconPath(icon.file),
+            created: Date.now() + i++
+          });
+        }
+      }
+      localStorage.setItem(SEED_FLAG, "1");
+    } catch (error) {
+      showError(error);
+    }
+  }
 
   function closeModal(modal) {
     if (modal) modal.classList.add("hidden");
@@ -28,9 +98,10 @@
     $("matBrand").value = material?.brand || "";
     $("matModel").value = material?.model || "";
     $("matObservation").value = material?.observation || "";
-    $("matQty").value = material?.qty || 1;
+    $("matQty").value = material && material.qty != null ? material.qty : 1;
     $("matPhoto").value = "";
     $("photoPreview").innerHTML = oldPhoto ? `<img src="${oldPhoto}" alt="Foto del material">` : "";
+    renderIconPicker();
     materialModal.classList.remove("hidden");
     setTimeout(() => $("matName").focus(), 0);
   }
@@ -53,7 +124,7 @@
         brand: $("matBrand").value.trim(),
         model: $("matModel").value.trim(),
         observation: $("matObservation").value.trim(),
-        qty: Math.max(1, Number($("matQty").value) || 1),
+        qty: Math.max(0, Number($("matQty").value) || 0),
         photo: oldPhoto || old?.photo || "",
         created: old?.created || Date.now()
       };
@@ -86,6 +157,7 @@
       if (!file) return;
       oldPhoto = await readFile(file);
       $("photoPreview").innerHTML = `<img src="${oldPhoto}" alt="Vista previa">`;
+      renderIconPicker();
     } catch (error) {
       showError(error);
     }
@@ -109,10 +181,13 @@
 
       for (const material of materials) {
         const card = document.createElement("article");
-        card.className = "material-card";
+        const qty = Number(material.qty) || 0;
+        card.className = "material-card" + (qty > 0 ? " in-list" : "");
+        card.dataset.category = material.category || "Otros";
         card.innerHTML = `
           <div class="material-photo">
             ${material.photo ? `<img src="${material.photo}" alt="">` : "🧰"}
+            ${qty > 0 ? `<span class="material-qty-badge">×${qty}</span>` : ""}
           </div>
           <div class="material-info">
             <span class="material-category">${escapeHtml(material.category || "Otros")}</span>
@@ -120,10 +195,10 @@
             <p><strong>${escapeHtml(material.brand || "Sin marca")}</strong>${material.model ? ` · ${escapeHtml(material.model)}` : ""}</p>
             ${material.observation ? `<p>${escapeHtml(material.observation)}</p>` : ""}
             <div class="qty-row">
-              <strong>Cantidad</strong>
+              <strong>Necesito</strong>
               <div class="qty-controls">
                 <button type="button" class="minus">−</button>
-                <span>${Number(material.qty) || 1}</span>
+                <span>${qty}</span>
                 <button type="button" class="plus">+</button>
               </div>
             </div>
@@ -148,7 +223,7 @@
     try {
       const material = await dbGet(stores.materials, id);
       if (!material) return;
-      material.qty = Math.max(1, (Number(material.qty) || 1) + delta);
+      material.qty = Math.max(0, (Number(material.qty) || 0) + delta);
       await dbPut(stores.materials, material);
       await renderMaterials();
     } catch (error) {
@@ -168,9 +243,9 @@
 
   async function renderList() {
     try {
-      const materials = await dbGetAll(stores.materials);
+      const materials = (await dbGetAll(stores.materials)).filter((m) => (Number(m.qty) || 0) > 0);
       if (!materials.length) {
-        alert("No hay materiales para mostrar.");
+        alert("No hay materiales con cantidad asignada todavía. Sumá cantidades con el + en cada tarjeta.");
         return;
       }
 
@@ -187,14 +262,31 @@
           html += `<div class="list-item"><span>${escapeHtml(material.name)}${material.brand ? ` · ${escapeHtml(material.brand)}` : ""}</span><strong>× ${Number(material.qty) || 1}</strong></div>`;
         }
       }
-      html += `</div><div class="list-actions"><button type="button" class="btn btn-primary" id="saveShareList">💾 Guardar / compartir</button></div>`;
+      html += `</div><div class="list-actions"><button type="button" class="btn btn-primary" id="saveShareList">💾 Guardar / compartir</button><button type="button" class="btn btn-secondary" id="whatsappShareList">🟢 Enviar por WhatsApp</button></div>`;
 
       $("listContent").innerHTML = html;
       listModal.classList.remove("hidden");
       $("saveShareList").addEventListener("click", () => shareList(materials));
+      $("whatsappShareList").addEventListener("click", () => shareListWhatsapp(materials));
     } catch (error) {
       showError(error);
     }
+  }
+
+  function shareListWhatsapp(materials) {
+    const groups = {};
+    materials.forEach((material) => (groups[material.category || "Otros"] ||= []).push(material));
+    const lines = [
+      "*Lista de materiales – Electricista App*",
+      "",
+      ...Object.entries(groups).flatMap(([category, items]) => [
+        `*${category}*`,
+        ...items.map((material) => `• ${material.name}${material.brand ? ` (${material.brand})` : ""} x${Number(material.qty) || 1}`),
+        ""
+      ])
+    ];
+    const text = encodeURIComponent(lines.join("\n"));
+    window.open(`https://wa.me/?text=${text}`, "_blank");
   }
 
   async function shareList(materials) {
@@ -247,7 +339,7 @@
     }
   }
 
-  function init() {
+  async function init() {
     $("addMaterialBtn")?.addEventListener("click", () => openMaterial());
     $("emptyAddBtn")?.addEventListener("click", () => openMaterial());
     $("viewListBtn")?.addEventListener("click", renderList);
@@ -255,11 +347,13 @@
     $("categoryFilter")?.addEventListener("change", renderMaterials);
     $("matPhoto")?.addEventListener("change", handlePhoto);
     materialForm?.addEventListener("submit", saveMaterial);
+    renderIconPicker();
 
     document.querySelectorAll("[data-close]").forEach((button) => {
       button.addEventListener("click", () => closeModal(button.closest(".modal")));
     });
 
+    await seedDefaultCatalog();
     renderMaterials();
   }
 

@@ -13,20 +13,56 @@
   background:#fff;
   border:1px solid #e3e3df;
   border-radius:15px;
-  overflow:hidden
+  overflow:hidden;
+  border-left:4px solid #ccc;
+  transition:opacity .15s, box-shadow .15s;
+  opacity:.62
 }
+.material-card.in-list {
+  opacity:1;
+  box-shadow:0 3px 14px #0000000f
+}
+.material-card[data-category="Tomas"] { border-left-color:#2f8fe0 }
+.material-card[data-category="Teclas"] { border-left-color:#8a5cf6 }
+.material-card[data-category="Térmicas"] { border-left-color:#e0a52f }
+.material-card[data-category="Disyuntores"] { border-left-color:#e0562f }
+.material-card[data-category="Cajas"] { border-left-color:#4caf7d }
+.material-card[data-category="Cables"] { border-left-color:#c0392b }
+.material-card[data-category="Iluminación"] { border-left-color:#f1c40f }
+.material-card[data-category="Otros"] { border-left-color:#9aa0a6 }
 .material-photo {
   height:150px;
   background:#ededeb;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:2.7rem
+  font-size:2.7rem;
+  padding:14px;
+  position:relative
 }
 .material-photo img {
-  width:100%;
-  height:100%;
-  object-fit:cover
+  max-width:100%;
+  max-height:100%;
+  width:auto;
+  height:auto;
+  object-fit:contain
+}
+.material-qty-badge {
+  position:absolute;
+  top:8px;
+  right:8px;
+  background:#ffd21c;
+  color:#171717;
+  font-weight:800;
+  font-size:.78rem;
+  min-width:24px;
+  height:24px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 6px;
+  box-shadow:0 2px 6px #0003
 }
 .material-info {
   padding:16px
@@ -118,4 +154,60 @@
   display: block;
   margin-top: 7px;
   color: #666;
+}
+
+.icon-picker {
+  margin-top: 14px;
+}
+.icon-picker-label {
+  display: block;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #555;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.icon-picker-strip {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.icon-pick-btn {
+  flex: 0 0 auto;
+  width: 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: #ededeb;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 6px 4px 5px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.icon-pick-btn:hover {
+  background: #e4e4e0;
+}
+.icon-pick-btn.selected {
+  border-color: #ffd21c;
+  background: #fff9e0;
+}
+.icon-pick-btn img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.icon-pick-btn span {
+  font-size: .6rem;
+  text-align: center;
+  color: #555;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }

@@ -83,19 +83,20 @@
       detailContent.innerHTML = `
         <div class="detail-header"><div><span class="eyebrow">${escapeHtml(currentWork.category)}</span><h2>${escapeHtml(currentWork.name)}</h2><div class="detail-description">${escapeHtml(currentWork.description || "Sin descripción")}</div></div>
         <div class="detail-tools"><button type="button" class="btn btn-secondary edit-work">✏️ Editar</button><button type="button" class="btn btn-primary add-photo">📷 Agregar foto</button><button type="button" class="btn btn-danger delete-detail">🗑️</button></div></div>
-        <div class="photo-grid">${photos.map((p) => photoCard(p)).join("")}</div>`;
+        <div class="photo-grid">${photos.map((p, i) => photoCard(p, i)).join("")}</div>`;
       detailContent.querySelector(".edit-work")?.addEventListener("click", () => { detailModal.classList.add("hidden"); openWorkForm(currentWork); });
       detailContent.querySelector(".add-photo")?.addEventListener("click", openPhotoSource);
       detailContent.querySelector(".delete-detail")?.addEventListener("click", () => deleteWork(id));
       detailContent.querySelectorAll(".delete-photo").forEach((b, i) => b.addEventListener("click", async () => { if (confirm("¿Eliminar esta foto?")) { await dbDelete(stores.photos, photos[i].id); await openDetail(id); } }));
       detailContent.querySelectorAll(".edit-photo").forEach((b, i) => b.addEventListener("click", () => openEditor(photos[i])));
       detailContent.querySelectorAll(".edit-photo-info").forEach((b, i) => b.addEventListener("click", () => editPhotoInfo(photos[i])));
+      detailContent.querySelectorAll(".photo-view").forEach((b, i) => b.addEventListener("click", () => openLightbox(photos, i)));
       detailModal.classList.remove("hidden");
     } catch (error) { showError(error); }
   }
 
-  function photoCard(p) {
-    return `<article class="photo-card"><img src="${p.data}" alt="${escapeHtml(p.description || "Foto de trabajo")}"><div class="photo-info"><strong>${escapeHtml(p.description || "Sin descripción")}</strong><small>${new Date(p.created || Date.now()).toLocaleString("es-AR")}</small></div><div class="photo-actions"><button type="button" class="edit-photo">🎨 Editar</button><button type="button" class="edit-photo-info">📝 Descripción</button><button type="button" class="delete-photo">🗑️</button></div></article>`;
+  function photoCard(p, i) {
+    return `<article class="photo-card"><button type="button" class="photo-view" data-index="${i}"><img src="${p.data}" alt="${escapeHtml(p.description || "Foto de trabajo")}"></button><div class="photo-info"><strong>${escapeHtml(p.description || "Sin descripción")}</strong><small>${new Date(p.created || Date.now()).toLocaleString("es-AR")}</small></div><div class="photo-actions"><button type="button" class="edit-photo">🎨 Editar</button><button type="button" class="edit-photo-info">📝 Descripción</button><button type="button" class="delete-photo">🗑️</button></div></article>`;
   }
 
   async function editPhotoInfo(photo) {
@@ -374,6 +375,181 @@
     modal.querySelector(".save-edit").onclick=async()=>{
       try{const annotated=canvas.toDataURL("image/jpeg",.92);await dbPut(stores.photos,{...photo,data:annotated,original:photo.original||photo.data,objects,annotated:true});modal.remove();await openDetail(currentWork.id);await renderWorks();}catch(error){showError(error);}
     };
+  }
+
+  // ---- Visor de fotos a pantalla completa (zoom, swipe, descripción) ----
+  function openLightbox(photos, startIndex) {
+    if (!photos.length) return;
+    let index = startIndex;
+    let scale = 1, tx = 0, ty = 0;
+    let pinchStartDist = 0, pinchStartScale = 1;
+    let dragStart = null, dragOrigin = null;
+    let lastTap = 0;
+    const pointers = new Map();
+
+    const modal = document.createElement("div");
+    modal.className = "lightbox-modal";
+    modal.innerHTML = `
+      <button type="button" class="lightbox-close" aria-label="Cerrar">×</button>
+      <button type="button" class="lightbox-nav lightbox-prev" aria-label="Anterior">‹</button>
+      <button type="button" class="lightbox-nav lightbox-next" aria-label="Siguiente">›</button>
+      <div class="lightbox-stage"><img class="lightbox-img" alt=""></div>
+      <div class="lightbox-footer">
+        <p class="lightbox-desc"></p>
+        <div class="lightbox-meta"><span class="lightbox-date"></span><span class="lightbox-counter"></span></div>
+      </div>`;
+    document.body.appendChild(modal);
+    document.body.style.overflow = "hidden";
+
+    const img = modal.querySelector(".lightbox-img");
+    const stage = modal.querySelector(".lightbox-stage");
+    const desc = modal.querySelector(".lightbox-desc");
+    const dateEl = modal.querySelector(".lightbox-date");
+    const counter = modal.querySelector(".lightbox-counter");
+
+    function applyTransform() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    }
+
+    function resetZoom() {
+      scale = 1; tx = 0; ty = 0;
+      applyTransform();
+    }
+
+    function clampPan() {
+      const maxPan = 400 * (scale - 1);
+      tx = Math.max(-maxPan, Math.min(maxPan, tx));
+      ty = Math.max(-maxPan, Math.min(maxPan, ty));
+    }
+
+    function render() {
+      const photo = photos[index];
+      img.src = photo.data;
+      desc.textContent = photo.description || "Sin descripción";
+      dateEl.textContent = new Date(photo.created || Date.now()).toLocaleString("es-AR");
+      counter.textContent = `${index + 1} / ${photos.length}`;
+      modal.querySelector(".lightbox-prev").style.visibility = photos.length > 1 ? "visible" : "hidden";
+      modal.querySelector(".lightbox-next").style.visibility = photos.length > 1 ? "visible" : "hidden";
+      resetZoom();
+    }
+
+    function go(delta) {
+      index = (index + delta + photos.length) % photos.length;
+      render();
+    }
+
+    function close() {
+      document.body.style.overflow = "";
+      modal.remove();
+    }
+
+    modal.querySelector(".lightbox-close").addEventListener("click", close);
+    modal.querySelector(".lightbox-prev").addEventListener("click", () => go(-1));
+    modal.querySelector(".lightbox-next").addEventListener("click", () => go(1));
+    modal.addEventListener("click", (e) => { if (e.target === modal || e.target === stage) close(); });
+
+    function onKey(e) {
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(1);
+    }
+    document.addEventListener("keydown", onKey);
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(modal)) {
+        document.removeEventListener("keydown", onKey);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true });
+
+    function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+    img.addEventListener("pointerdown", (e) => {
+      img.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 1) {
+        dragStart = { x: e.clientX, y: e.clientY, time: Date.now() };
+        dragOrigin = { tx, ty };
+      } else if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinchStartDist = dist(a, b);
+        pinchStartScale = scale;
+      }
+    });
+
+    img.addEventListener("pointermove", (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const newDist = dist(a, b);
+        if (pinchStartDist > 0) {
+          scale = Math.max(1, Math.min(4, pinchStartScale * (newDist / pinchStartDist)));
+          clampPan();
+          applyTransform();
+        }
+        return;
+      }
+
+      if (pointers.size === 1 && dragStart) {
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+        if (scale > 1.02) {
+          tx = dragOrigin.tx + dx;
+          ty = dragOrigin.ty + dy;
+          clampPan();
+          applyTransform();
+        } else {
+          tx = dx * 0.4;
+          applyTransform();
+        }
+      }
+    });
+
+    function endPointer(e) {
+      pointers.delete(e.pointerId);
+      if (pointers.size === 0 && dragStart) {
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+        const elapsed = Date.now() - dragStart.time;
+
+        if (scale <= 1.02) {
+          if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+            go(dx < 0 ? 1 : -1);
+          } else if (Math.abs(dx) < 8 && Math.abs(dy) < 8 && elapsed < 300) {
+            const now = Date.now();
+            if (now - lastTap < 320) {
+              scale = 2.4; clampPan(); applyTransform();
+              lastTap = 0;
+            } else {
+              lastTap = now;
+              tx = 0; applyTransform();
+            }
+          } else {
+            tx = 0; applyTransform();
+          }
+        }
+        dragStart = null;
+      }
+      if (pointers.size < 2) pinchStartDist = 0;
+    }
+    img.addEventListener("pointerup", endPointer);
+    img.addEventListener("pointercancel", endPointer);
+
+    img.addEventListener("dblclick", () => {
+      if (scale > 1.02) resetZoom();
+      else { scale = 2.4; applyTransform(); }
+    });
+
+    img.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      scale = Math.max(1, Math.min(4, scale - e.deltaY * 0.0015));
+      clampPan();
+      applyTransform();
+    }, { passive: false });
+
+    render();
   }
 
   function init(){renderWorks();}
