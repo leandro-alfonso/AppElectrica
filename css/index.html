@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#171717">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+
+<title>Electricista App</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html"><span>⚡</span> Electricista App</a>
+  <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
+  <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">🌙</button>
+  <nav id="mainNav">
+    <a class="active" href="index.html">⚡ Inicio</a>
+    <a href="galeria.html">📸 Trabajos</a>
+    <a href="materiales.html">🧰 Materiales</a>
+    <a href="calculadora.html">🧮 Calculadora</a>
+  </nav>
+</header>
+
+<main class="page home-page">
+  <section class="hero">
+    <div>
+      <span class="eyebrow">HERRAMIENTA PROFESIONAL</span>
+      <h1>Todo tu trabajo eléctrico,<br><strong>en un solo lugar.</strong></h1>
+      <p>Organizá trabajos, fotos, anotaciones, materiales y cálculos desde cualquier dispositivo.</p>
+      <a class="btn btn-primary" href="galeria.html">📸 Ir a trabajos</a>
+    </div>
+    <div class="hero-icon">⚡</div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><div><span class="eyebrow">ACCESOS RÁPIDOS</span><h2>¿Qué querés hacer?</h2></div></div>
+    <div class="feature-grid">
+      <a class="feature-card" href="galeria.html"><span class="feature-icon">📸</span><h3>Trabajos</h3><p>Guardá trabajos, fotos y planos anotados.</p><span class="card-arrow">→</span></a>
+      <a class="feature-card" href="materiales.html"><span class="feature-icon">🧰</span><h3>Materiales</h3><p>Armá listas con cantidades, marcas y fotos.</p><span class="card-arrow">→</span></a>
+      <a class="feature-card" href="calculadora.html"><span class="feature-icon">🧮</span><h3>Calculadora</h3><p>Calculá corriente y consultá referencias de protección.</p><span class="card-arrow">→</span></a>
+    </div>
+  </section>
+
+  <section class="stats-grid">
+    <div class="stat-card"><span>📁</span><div><strong id="workCount">0</strong><small>Trabajos guardados</small></div></div>
+    <div class="stat-card"><span>🧰</span><div><strong id="materialCount">0</strong><small>Materiales registrados</small></div></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title"><div><span class="eyebrow">TUS DATOS</span><h2>Copia de seguridad</h2></div></div>
+    <div class="backup-card">
+      <p>Todo se guarda solo en este dispositivo. Descargá un backup de vez en cuando por si cambiás de celular o navegador.</p>
+      <div class="backup-actions">
+        <button class="btn btn-secondary" id="exportBackupBtn">⬇️ Descargar backup (.json)</button>
+        <button class="btn btn-secondary" id="importBackupBtn">⬆️ Restaurar backup</button>
+        <input type="file" id="importBackupInput" accept="application/json" hidden>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer"><div><strong>⚡ Electricista App</strong><span>Tu herramienta de trabajo eléctrico</span></div><span>Versión local · Tus datos quedan en este dispositivo</span></footer>
+<script src="js/app.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("exportBackupBtn")?.addEventListener("click", () => window.Electricista.exportBackup());
+  const input = document.getElementById("importBackupInput");
+  document.getElementById("importBackupBtn")?.addEventListener("click", () => input.click());
+  input?.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!confirm("Esto va a agregar/actualizar datos desde el backup. ¿Continuar?")) { input.value = ""; return; }
+    try {
+      await window.Electricista.importBackup(file);
+      alert("Backup restaurado correctamente.");
+      location.reload();
+    } catch (error) {
+      window.Electricista.showError(error);
+    }
+    input.value = "";
+  });
+});
+</script>
+</body>
+</html>
